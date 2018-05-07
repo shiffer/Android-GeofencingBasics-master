@@ -17,6 +17,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        targetCompatibility 1.8
+        sourceCompatibility 1.8
+    }
 }
 
 dependencies {
@@ -26,6 +30,17 @@ dependencies {
 
     implementation 'com.android.support:support-v4:27.1.1'
 
-    compile 'com.google.android.gms:play-services-location:15.0.0'
-    compile 'com.google.android.gms:play-services-maps:15.0.0'
+    // beacon library
+    compile 'org.altbeacon:android-beacon-library:2.12.3'
+
+    // play-services-location
+    compile 'com.google.android.gms:play-services-location:15.0.1'
+    compile 'com.google.android.gms:play-services-maps:15.0.1'
+
+    // room
+    implementation 'android.arch.persistence.room:runtime:1.0.0'
+    annotationProcessor "android.arch.persistence.room:compiler:1.0.0"
+
+    // stetho
+    debugImplementation 'com.facebook.stetho:stetho:1.5.0'
 }

@@ -9,6 +9,7 @@ import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.Log;
@@ -33,6 +34,12 @@ public class GeofenceTransitionService extends IntentService {
     public GeofenceTransitionService() {
         super(TAG);
     }
+
+//    @Override
+//    public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
+//        super.onStartCommand(intent, flags, startId);
+//        return START_REDELIVER_INTENT;
+//    }
 
     @Override
     protected void onHandleIntent(Intent intent) {
@@ -71,7 +78,6 @@ public class GeofenceTransitionService extends IntentService {
         // Send notification details as a String
         sendNotification(geofenceTransitionDetails);
     }
-
 
     private String getGeofenceTransitionDetails(int geoFenceTransition, List<Geofence> triggeringGeofences) {
 
@@ -131,7 +137,6 @@ public class GeofenceTransitionService extends IntentService {
         return notificationBuilder.build();
     }
 
-
     private static String getErrorString(int errorCode) {
         switch (errorCode) {
             case GeofenceStatusCodes.GEOFENCE_NOT_AVAILABLE:
@@ -148,20 +153,18 @@ public class GeofenceTransitionService extends IntentService {
         }
     }
 
-
     private void initAlarmManager() {
         Log.d(TAG, "initAlarmManager() called");
 
         final Calendar calendar = Calendar.getInstance();
         final Intent intent = new Intent(this, AlarmReceiver.class);
 
-        mAlarmManagerPendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
+        mAlarmManagerPendingIntent = PendingIntent.getBroadcast(this,
+                Constants.ALARM_MANAGER_PENDING_INTENT_REQUEST_CODE, intent, 0);
 
         mAlarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         mAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
                 AlarmManager.INTERVAL_FIFTEEN_MINUTES, mAlarmManagerPendingIntent);
-//        mAlarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
-//                60000, mAlarmManagerPendingIntent);
     }
 
     private void cancelAlarmManager() {

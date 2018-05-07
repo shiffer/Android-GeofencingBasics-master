@@ -12,10 +12,14 @@ import android.location.Location;
 import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnSuccessListener;
+import com.tinmegali.mylocation.database.InfiDatabase;
+import com.tinmegali.mylocation.database.beacon.GeoPoint;
+
+import java.util.Calendar;
 
 /**
  * Created by ohadshiffer
@@ -26,10 +30,6 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     private static final String TAG = "AlarmReceiver";
 
-    public static final int FIRST_BOARD = 5000;
-    public static final int SECOND_BOARD = 1000;
-    public static final int THIRD_BOARD = 500;
-
     @Override
     public void onReceive(final Context context, Intent intent) {
         Log.d(TAG, "onReceive() called with: context = [" + context + "], intent = [" + intent + "]");
@@ -37,76 +37,121 @@ public class AlarmReceiver extends BroadcastReceiver {
         final FusedLocationProviderClient client = LocationServices.getFusedLocationProviderClient(context);
 
         if (checkPermission(context)) {
-            client.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
-                @Override
-                public void onSuccess(Location location) {
-                    Log.d(TAG, "onSuccess() called with: location = [" + location + "]");
+
+            client.getLastLocation().addOnSuccessListener(location -> {
+                Log.d(TAG, "onSuccess() called with: location = [" + location + "]");
+
+                /*
+                 * check what is the distance between this location and the beacon location.
+                 * more then GEOFENCE_RADIUS - should cancel alarm manager.
+                 * between GEOFENCE_RADIUS - SECOND_BOUND - alarm manager's interval should be 15 minutes.
+                 * between SECOND_BOUND - THIRD_BOUND - alarm manager's interval should be 5 minutes.
+                 * less then THIRD_BOUND - cancel alarm manager and activate beacon finder service.
+                 */
+
+                final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+//                final String latStr = sharedPref.getString(MainActivity.KEY_GEOFENCE_LAT, null);
+//                final String lonStr = sharedPref.getString(MainActivity.KEY_GEOFENCE_LON, null);
+//
+//                double lat = latStr != null ? Double.valueOf(latStr) : 0;
+//                double lon = lonStr != null ? Double.valueOf(lonStr) : 0;
+
+                // check if we saved a geo fence location
+//                if (lat != 0 && lon != 0) {
+//
+//                    final Location geoFenceLocation = new Location("GeoFenceLocation");
+//                    geoFenceLocation.setLatitude(lat);
+//                    geoFenceLocation.setLongitude(lon);
+
+                // get geo fence location as it saved in SP.
+                final Location geoFenceLocation = Utils.getGeoFenceLocation(context);
+
+                if (geoFenceLocation != null) {
+
+                    final float distance = geoFenceLocation.distanceTo(location);
+                    Log.d(TAG, "distance: " + distance);
+
+                    @Constants.GeoPointType String type;
 
                     /*
-                     * check what is the distance between this location and the beacon location.
-                     * more then 10km - should cancel alarm manager.
-                     * between 5km - 10km - alarm manager's interval should be 15 minutes.
-                     * between 2km - 5km - alarm manager's interval should be 5 minutes.
-                     * less then 2km - cancel alarm manager and activate beacon finder service.
+                     * cancel previous alarm manager in order to set a new one or start {@link MyBeaconService} instead.
                      */
+                    cancelAlarmManager(context);
 
-                    final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
-                    final float lat = sharedPref.getFloat(MainActivity.KEY_GEOFENCE_LAT, Float.MAX_VALUE);
-                    final float lon = sharedPref.getFloat(MainActivity.KEY_GEOFENCE_LON, Float.MAX_VALUE);
-
-                    // check if we saved a geo fence location
-                    if (lat != Long.MAX_VALUE && lon != Long.MAX_VALUE) {
-
-                        final Location geoFenceLocation = new Location("GeoFenceLocation");
-                        geoFenceLocation.setLatitude(lat);
-                        geoFenceLocation.setLongitude(lon);
-
-                        float distance = geoFenceLocation.distanceTo(location);
-
-                        Log.d(TAG, "distance: " + distance);
-
-                        if (distance > FIRST_BOARD) {
-                            Log.d(TAG, "distance > FIRST_BOARD (" + FIRST_BOARD + ")");
-                            putStateIntoSP(sharedPref, Constants.BeaconSearchState.OUT_OF_RANGE);
-
-                            // TODO: 30/04/2018 cancel alarm manager.
-                            // UPDATE: its being canceled by the service once we exit the geofence area.
-                            //cancelAlarmManager(context);
-                        } else if (distance > SECOND_BOARD) {
-                            Log.d(TAG, "distance > SECOND_BOARD (" + SECOND_BOARD + ")");
-                            putStateIntoSP(sharedPref, Constants.BeaconSearchState.FIRST_RADIUS);
-
-                            // TODO: 30/04/2018 alarm manager's interval should be 15 minutes.
-
-                        } else if (distance > THIRD_BOARD) {
-                            Log.d(TAG, "distance > THIRD_BOARD (" + THIRD_BOARD + ")");
-                            putStateIntoSP(sharedPref, Constants.BeaconSearchState.SECOND_RADIUS);
-
-                            // TODO: 30/04/2018 alarm manager's interval should be 5 minutes.
-
-                        } else {
-                            Log.d(TAG, "distance is less then (" + THIRD_BOARD + ")!!!!!");
-                            putStateIntoSP(sharedPref, Constants.BeaconSearchState.THIRD_RADIUS);
-
-                            // TODO: 30/04/2018 cancel alarm manager and activate beacon finder service.
-
-                        }
+                    /*
+                     * the distance is more then {@link Constants.SECOND_BOUND} (right now its 100 meters).
+                     * this is the first radius (the farthest radius).
+                     * alarm every 15 minutes to recheck location.
+                     */
+                    if (distance > Constants.SECOND_BOUND) {
+                        type = Constants.GeoPointType.FIRST_RADIUS;
+                        putStateIntoSP(sharedPref, Constants.BeaconSearchState.FIRST_RADIUS);
+                        setAlarm(context, AlarmManager.INTERVAL_FIFTEEN_MINUTES);
                     }
+
+                    /*
+                     * the distance is between {@link Constants.THIRD_BOUND} to {@link Constants.SECOND_BOUND} (right now its 50-100 meters).
+                     * this is the second radius (the middle radius).
+                     * alarm every 5 minutes to recheck location.
+                     */
+                    else if (distance > Constants.THIRD_BOUND) {
+                        type = Constants.GeoPointType.SECOND_RADIUS;
+                        putStateIntoSP(sharedPref, Constants.BeaconSearchState.SECOND_RADIUS);
+                        setAlarm(context, Constants.INTERVAL_FIVE_MINUTES);
+                    }
+
+                    /*
+                     * the distance is between the beacon location to {@link Constants.THIRD_BOUND} (right now its 0-50 meters).
+                     * this is the first radius (the closest radius).
+                     * start MyBeaconService in order to locate beacons.
+                     */
+                    else {
+                        type = Constants.GeoPointType.THIRD_RADIUS;
+                        putStateIntoSP(sharedPref, Constants.BeaconSearchState.THIRD_RADIUS);
+                        context.startService(new Intent(context, MyBeaconService.class));
+                    }
+
+                    String msg = "distance from beacon = " + distance;
+                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+
+                    // insert the current location to DB.
+                    InfiDatabase.executeAsync(() -> {
+                        final GeoPoint point = new GeoPoint(Calendar.getInstance().getTimeInMillis(), type, location.getLatitude(), location.getLongitude());
+                        point.setDistance(distance);
+                        InfiDatabase.get().getGeoPointDao().insert(point);
+                    });
+//                }
                 }
             });
+
         } else {
             Log.e(TAG, "onReceive: no permission ACCESS_FINE_LOCATION!");
         }
 
     }
 
+    private void setAlarm(Context context, long intervalMillis) {
+        final long timeInMillis = Calendar.getInstance().getTimeInMillis();
+        final Intent intent = new Intent(context, AlarmReceiver.class);
+
+        final PendingIntent alarmManagerPendingIntent = PendingIntent.getBroadcast(context,
+                Constants.ALARM_MANAGER_PENDING_INTENT_REQUEST_CODE, intent, 0);
+
+        final AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager != null) {
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, timeInMillis + intervalMillis, intervalMillis, alarmManagerPendingIntent);
+        }
+    }
+
     private void cancelAlarmManager(Context context) {
         final Intent intent = new Intent(context, AlarmReceiver.class);
 
-        PendingIntent alarmManagerPendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        final PendingIntent alarmManagerPendingIntent = PendingIntent.getBroadcast(context,
+                Constants.ALARM_MANAGER_PENDING_INTENT_REQUEST_CODE, intent, 0);
 
-        if (alarmManager!= null) {
+        final AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+
+        if (alarmManager != null) {
             alarmManager.cancel(alarmManagerPendingIntent);
         }
     }

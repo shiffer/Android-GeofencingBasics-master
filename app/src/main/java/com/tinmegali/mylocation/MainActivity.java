@@ -55,7 +55,6 @@ public class MainActivity
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private static final long GEO_DURATION = 60 * 60 * 1000;
-    private static final float GEOFENCE_RADIUS = 5000.0f; // in meters
     private static final String GEOFENCE_REQ_ID = "My Geofence";
     private static final String NOTIFICATION_MSG = "NOTIFICATION MSG";
 
@@ -363,7 +362,7 @@ public class MainActivity
         Log.i(TAG, "startGeofence()");
 
         if (geoFenceMarker != null) {
-            final Geofence geofence = createGeofence(geoFenceMarker.getPosition(), GEOFENCE_RADIUS);
+            final Geofence geofence = createGeofence(geoFenceMarker.getPosition(), Constants.GEOFENCE_RADIUS);
             final GeofencingRequest geofenceRequest = createGeofenceRequest(geofence);
             addGeofence(geofenceRequest);
         } else {
@@ -431,7 +430,7 @@ public class MainActivity
                 .center(geoFenceMarker.getPosition())
                 .strokeColor(Color.argb(50, 70, 70, 70))
                 .fillColor(Color.argb(100, 150, 150, 150))
-                .radius(GEOFENCE_RADIUS);
+                .radius(Constants.GEOFENCE_RADIUS);
 
         geoFenceLimits = map.addCircle(circleOptions);
     }
@@ -443,8 +442,8 @@ public class MainActivity
         final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         final SharedPreferences.Editor editor = sharedPref.edit();
 
-        editor.putFloat(KEY_GEOFENCE_LAT, (float) geoFenceMarker.getPosition().latitude);
-        editor.putFloat(KEY_GEOFENCE_LON, (float) geoFenceMarker.getPosition().longitude);
+        editor.putString(KEY_GEOFENCE_LAT, String.valueOf(geoFenceMarker.getPosition().latitude));
+        editor.putString(KEY_GEOFENCE_LON, String.valueOf(geoFenceMarker.getPosition().longitude));
         editor.apply();
     }
 
@@ -455,8 +454,11 @@ public class MainActivity
         final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 
         if (sharedPref.contains(KEY_GEOFENCE_LAT) && sharedPref.contains(KEY_GEOFENCE_LON)) {
-            final float lat = sharedPref.getFloat(KEY_GEOFENCE_LAT, -1);
-            final float lon = sharedPref.getFloat(KEY_GEOFENCE_LON, -1);
+            final String latStr = sharedPref.getString(MainActivity.KEY_GEOFENCE_LAT, null);
+            final String lonStr = sharedPref.getString(MainActivity.KEY_GEOFENCE_LON, null);
+
+            double lat = latStr != null ? Double.valueOf(latStr) : 0;
+            double lon = lonStr != null? Double.valueOf(lonStr) : 0;
 
             final LatLng latLng = new LatLng(lat, lon);
             markerForGeofence(latLng);
