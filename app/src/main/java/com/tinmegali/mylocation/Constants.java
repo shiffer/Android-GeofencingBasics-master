@@ -17,6 +17,7 @@ public class Constants {
     public static final int SECOND_BOUND = 100;
     public static final int THIRD_BOUND = 50;
     public static final int INTERVAL_FIVE_MINUTES = 60 * 1000 * 5;
+    public static final int INTERVAL_MINUTE = 60 * 1000;
 
 
     @IntDef({BeaconSearchState.OUT_OF_RANGE, BeaconSearchState.FIRST_RADIUS, BeaconSearchState.SECOND_RADIUS,

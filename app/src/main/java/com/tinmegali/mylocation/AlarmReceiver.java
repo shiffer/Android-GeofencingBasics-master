@@ -50,18 +50,6 @@ public class AlarmReceiver extends BroadcastReceiver {
                  */
 
                 final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
-//                final String latStr = sharedPref.getString(MainActivity.KEY_GEOFENCE_LAT, null);
-//                final String lonStr = sharedPref.getString(MainActivity.KEY_GEOFENCE_LON, null);
-//
-//                double lat = latStr != null ? Double.valueOf(latStr) : 0;
-//                double lon = lonStr != null ? Double.valueOf(lonStr) : 0;
-
-                // check if we saved a geo fence location
-//                if (lat != 0 && lon != 0) {
-//
-//                    final Location geoFenceLocation = new Location("GeoFenceLocation");
-//                    geoFenceLocation.setLatitude(lat);
-//                    geoFenceLocation.setLongitude(lon);
 
                 // get geo fence location as it saved in SP.
                 final Location geoFenceLocation = Utils.getGeoFenceLocation(context);
@@ -86,6 +74,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                     if (distance > Constants.SECOND_BOUND) {
                         type = Constants.GeoPointType.FIRST_RADIUS;
                         putStateIntoSP(sharedPref, Constants.BeaconSearchState.FIRST_RADIUS);
+//                        setAlarm(context, Constants.INTERVAL_MINUTE);
                         setAlarm(context, AlarmManager.INTERVAL_FIFTEEN_MINUTES);
                     }
 
@@ -97,6 +86,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                     else if (distance > Constants.THIRD_BOUND) {
                         type = Constants.GeoPointType.SECOND_RADIUS;
                         putStateIntoSP(sharedPref, Constants.BeaconSearchState.SECOND_RADIUS);
+//                        setAlarm(context, Constants.INTERVAL_MINUTE);
                         setAlarm(context, Constants.INTERVAL_FIVE_MINUTES);
                     }
 
@@ -111,8 +101,8 @@ public class AlarmReceiver extends BroadcastReceiver {
                         context.startService(new Intent(context, MyBeaconService.class));
                     }
 
-                    String msg = "distance from beacon = " + distance;
-                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+//                    String msg = "distance from beacon = " + distance;
+//                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
 
                     // insert the current location to DB.
                     InfiDatabase.executeAsync(() -> {

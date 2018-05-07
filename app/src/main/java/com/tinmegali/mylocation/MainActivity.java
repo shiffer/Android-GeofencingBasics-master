@@ -54,11 +54,11 @@ public class MainActivity
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    private static final long GEO_DURATION = 60 * 60 * 1000;
+//    private static final long GEO_DURATION = 60 * 60 * 1000;
     private static final String GEOFENCE_REQ_ID = "My Geofence";
     private static final String NOTIFICATION_MSG = "NOTIFICATION MSG";
 
-    private final int UPDATE_INTERVAL = 1000; // Defined in milli seconds. This number in extremely low, and should be used only for debug.
+//    private final int UPDATE_INTERVAL = 1000; // Defined in milli seconds. This number in extremely low, and should be used only for debug.
     private final int FASTEST_INTERVAL = 900;
     private final int GEOFENCE_REQ_CODE = 0;
     private final int REQ_PERMISSION = 999;
@@ -120,16 +120,18 @@ public class MainActivity
         super.onStart();
 
         // Call GoogleApiClient connection when starting the Activity
-        googleApiClient.connect();
+        if (!googleApiClient.isConnected()) {
+            googleApiClient.connect();
+        }
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        // Disconnect GoogleApiClient when stopping Activity
-        googleApiClient.disconnect();
-    }
+//    @Override
+//    protected void onStop() {
+//        super.onStop();
+//
+//        // Disconnect GoogleApiClient when stopping Activity
+//        googleApiClient.disconnect();
+//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -236,7 +238,7 @@ public class MainActivity
 
         final LocationRequest locationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(UPDATE_INTERVAL)
+                .setInterval(Constants.INTERVAL_MINUTE)
                 .setFastestInterval(FASTEST_INTERVAL);
 
         if (checkPermission()) {
@@ -377,7 +379,7 @@ public class MainActivity
         return new Geofence.Builder()
                 .setRequestId(GEOFENCE_REQ_ID)
                 .setCircularRegion(latLng.latitude, latLng.longitude, radius)
-                .setExpirationDuration(GEO_DURATION)
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
                 .build();
     }
@@ -398,7 +400,7 @@ public class MainActivity
         if (geoFencePendingIntent != null)
             return geoFencePendingIntent;
 
-        final Intent intent = new Intent(this, GeofenceTransitionService.class);
+        final Intent intent = new Intent(getApplicationContext(), GeofenceTransitionService.class);
 
         geoFencePendingIntent = PendingIntent.getService(
                 this,

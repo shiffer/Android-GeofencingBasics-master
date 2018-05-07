@@ -91,18 +91,14 @@ public class MyBeaconService extends Service implements BeaconConsumer, RangeNot
         mBeaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(BeaconParser.EDDYSTONE_URL_LAYOUT));
         mBeaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout(BeaconParser.ALTBEACON_LAYOUT));
 
-        //konkakt?
-//        mBeaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25"));
-//        mBeaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
-//        mBeaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:0-3=4c000215,i:4-19,i:20-21,i:22-23,p:24-24"));
-
-        mBeaconManager.setBackgroundBetweenScanPeriod(120000L);
-//        mBeaconManager.setBackgroundScanPeriod(10000L);          // default is 10000L
-//        mBeaconManager.setForegroundBetweenScanPeriod(0L);      // default is 0L
-//        mBeaconManager.setForegroundScanPeriod(1100L);          // Default is 1100L
+        mBeaconManager.setBackgroundBetweenScanPeriod(120000L);     // 2 minutes between each scan
+//        mBeaconManager.setBackgroundScanPeriod(10000L);           // default is 10000L
+//        mBeaconManager.setForegroundBetweenScanPeriod(0L);        // default is 0L
+//        mBeaconManager.setForegroundScanPeriod(1100L);            // Default is 1100L
 
         //mBeaconManager.setMaxTrackingAge(10000);
         //mBeaconManager.setRegionExitPeriod(12000L);
+        mBeaconManager.setEnableScheduledScanJobs(true);
 
         try {
             if (mBeaconManager.isAnyConsumerBound()) {

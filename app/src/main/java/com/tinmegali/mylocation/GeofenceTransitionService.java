@@ -9,7 +9,6 @@ import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.Log;
@@ -34,12 +33,6 @@ public class GeofenceTransitionService extends IntentService {
     public GeofenceTransitionService() {
         super(TAG);
     }
-
-//    @Override
-//    public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
-//        super.onStartCommand(intent, flags, startId);
-//        return START_REDELIVER_INTENT;
-//    }
 
     @Override
     protected void onHandleIntent(Intent intent) {
