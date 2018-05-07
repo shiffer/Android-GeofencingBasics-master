@@ -118,7 +118,12 @@ public class MyBeaconService extends Service implements BeaconConsumer, RangeNot
 
         try {
 
-            final Identifier myBeaconNamespaceId = Identifier.parse("0x7d2f8868101c29959a00");
+            // on Ohad's phone (S8+)
+//            final Identifier myBeaconNamespaceId = Identifier.parse("0x7d2f8868101c29959a00");
+//            final Identifier myBeaconInstanceId = Identifier.parse("0x00000000000");
+
+            // Samsung Galaxy S6
+            final Identifier myBeaconNamespaceId = Identifier.parse("0x12345678901234567890");
             final Identifier myBeaconInstanceId = Identifier.parse("0x00000000000");
 
             mRegion = new Region("ohad", myBeaconNamespaceId, myBeaconInstanceId, null);

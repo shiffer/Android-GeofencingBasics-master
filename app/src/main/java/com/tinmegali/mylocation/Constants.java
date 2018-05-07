@@ -13,9 +13,9 @@ public class Constants {
     public static final String BEACON_SEARCH_STATE = "beacon_search_state";
     public static final int ALARM_MANAGER_PENDING_INTENT_REQUEST_CODE = 100;
 
-    public static final float GEOFENCE_RADIUS = 200.0f; // in meters
-    public static final int SECOND_BOUND = 100;
-    public static final int THIRD_BOUND = 50;
+    public static final float GEOFENCE_RADIUS = 2500.0f; // in meters
+    public static final int SECOND_BOUND = 1000;
+    public static final int THIRD_BOUND = 500;
     public static final int INTERVAL_FIVE_MINUTES = 60 * 1000 * 5;
     public static final int INTERVAL_MINUTE = 60 * 1000;
 
