@@ -17,7 +17,7 @@ import com.tinmegali.mylocation.Utils;
 @Entity(tableName = GeoPoint.TABLE_NAME)
 public class GeoPoint {
 
-    public static final String TABLE_NAME = "geo_points";
+    static final String TABLE_NAME = "geo_points";
 
     public GeoPoint(long time, String geoPointType, double lat, double lon) {
         this(Utils.getDate(time), geoPointType, lat, lon);
@@ -47,6 +47,12 @@ public class GeoPoint {
 
     @ColumnInfo(name = "distance")
     private float distance;
+
+    @ColumnInfo(name = "uniqueId")
+    private String uniqueId;
+
+    @ColumnInfo(name = "bluetoothAddress")
+    private String bluetoothAddress;
 
     @ColumnInfo(name = "id1")
     private String id1;
@@ -99,6 +105,22 @@ public class GeoPoint {
 
     public void setDistance(float distance) {
         this.distance = distance;
+    }
+
+    public String getUniqueId() {
+        return uniqueId;
+    }
+
+    public void setUniqueId(String uniqueId) {
+        this.uniqueId = uniqueId;
+    }
+
+    public String getBluetoothAddress() {
+        return bluetoothAddress;
+    }
+
+    public void setBluetoothAddress(String bluetoothAddress) {
+        this.bluetoothAddress = bluetoothAddress;
     }
 
     public String getId1() {

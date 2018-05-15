@@ -14,6 +14,8 @@ import java.util.Calendar;
  */
 public class Utils {
 
+    private static final String TAG = "Utils";
+
     public static String getDate(long time) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(time);
@@ -46,5 +48,23 @@ public class Utils {
                 geoFenceLocation.distanceTo(location) :
                 Float.MIN_VALUE;
     }
+
+//    private PendingIntent initAlarmManager(Context context) {
+//        Log.d(TAG, "initAlarmManager() called");
+//
+//        final Calendar calendar = Calendar.getInstance();
+//        final Intent intent = new Intent(context, AlarmReceiver.class);
+//
+//        final PendingIntent alarmManagerPendingIntent = PendingIntent.getBroadcast(context,
+//                Constants.ALARM_MANAGER_PENDING_INTENT_REQUEST_CODE, intent, 0);
+//
+//        final AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+//        if (alarmManager != null) {
+//            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+//                    AlarmManager.INTERVAL_FIFTEEN_MINUTES, alarmManagerPendingIntent);
+//        }
+//
+//        return alarmManagerPendingIntent;
+//    }
 
 }

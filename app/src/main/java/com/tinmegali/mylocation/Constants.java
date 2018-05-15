@@ -29,11 +29,13 @@ public class Constants {
         int THIRD_RADIUS = 3;
     }
 
-    @StringDef({GeoPointType.FIRST_RADIUS, GeoPointType.SECOND_RADIUS, GeoPointType.THIRD_RADIUS, GeoPointType.NEAR_BEACON})
+    @StringDef({GeoPointType.FIRST_RADIUS, GeoPointType.SECOND_RADIUS, GeoPointType.THIRD_RADIUS,
+            GeoPointType.NEAR_BEACON, GeoPointType.OTHER})
     public @interface GeoPointType {
         String FIRST_RADIUS = "FIRST_RADIUS";
         String SECOND_RADIUS = "SECOND_RADIUS";
         String THIRD_RADIUS = "THIRD_RADIUS";
         String NEAR_BEACON = "NEAR_BEACON";
+        String OTHER = "OTHER";
     }
 }

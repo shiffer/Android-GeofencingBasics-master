@@ -400,7 +400,8 @@ public class MainActivity
         if (geoFencePendingIntent != null)
             return geoFencePendingIntent;
 
-        final Intent intent = new Intent(getApplicationContext(), GeofenceTransitionService.class);
+        final Intent intent = new Intent(this, GeofenceTransitionIntentService.class);
+//        final Intent intent = new Intent(this, GeofenceTransitionService.class);
 
         geoFencePendingIntent = PendingIntent.getService(
                 this,

@@ -2,14 +2,17 @@ package com.tinmegali.mylocation;
 
 import android.Manifest;
 import android.app.AlarmManager;
+import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
@@ -98,6 +101,23 @@ public class AlarmReceiver extends BroadcastReceiver {
                         type = Constants.GeoPointType.THIRD_RADIUS;
                         putStateIntoSP(sharedPref, Constants.BeaconSearchState.THIRD_RADIUS);
                         context.startService(new Intent(context, MyBeaconService.class));
+
+//                        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
+//                            //final Intent mainActivityIntent = new Intent(context, MainActivity.class);
+//
+//                            PendingIntent mainActivityPendingIntent = PendingIntent.getService(
+//                                    context,
+//                                    0,
+//                                    intent,
+//                                    PendingIntent.FLAG_UPDATE_CURRENT);
+//
+//                            final MyBeaconService service = new MyBeaconService();
+//                            service.startForeground(10, createNotification(context, "MyBeaconService is working", mainActivityPendingIntent));
+////                            context.startForegroundService(new Intent(context, MyBeaconService.class));
+//                        } else {
+//                            context.startService(new Intent(context, MyBeaconService.class));
+//                        }
+
                     }
 
 //                    String msg = "distance from beacon = " + distance;
@@ -158,6 +178,22 @@ public class AlarmReceiver extends BroadcastReceiver {
         // Ask for permission if it wasn't granted yet
         final int permission = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION);
         return permission == PackageManager.PERMISSION_GRANTED;
+    }
+
+    // Create notification
+    private Notification createNotification(Context context, String msg, PendingIntent notificationPendingIntent) {
+        final NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, TAG);
+
+        notificationBuilder
+                .setSmallIcon(R.drawable.ic_action_location)
+                .setColor(Color.RED)
+                .setContentTitle(msg)
+                .setContentText("Geofence Notification!")
+                .setContentIntent(notificationPendingIntent)
+                .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_VIBRATE | Notification.DEFAULT_SOUND)
+                .setAutoCancel(true);
+
+        return notificationBuilder.build();
     }
 
 }

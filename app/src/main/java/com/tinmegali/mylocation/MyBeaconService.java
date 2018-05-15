@@ -1,7 +1,10 @@
 package com.tinmegali.mylocation;
 
 import android.Manifest;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.bluetooth.BluetoothA2dp;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -27,6 +30,7 @@ import org.altbeacon.beacon.Region;
 
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.concurrent.BlockingDeque;
 
 public class MyBeaconService extends Service implements BeaconConsumer, RangeNotifier, MonitorNotifier {
 
@@ -140,27 +144,47 @@ public class MyBeaconService extends Service implements BeaconConsumer, RangeNot
     public void didRangeBeaconsInRegion(Collection<Beacon> collection, Region region) {
         Log.d(TAG, "didRangeBeaconsInRegion() called with: collection = [" + collection + "], region = [" + region + "]");
 
-        final @Constants.GeoPointType String type = Constants.GeoPointType.NEAR_BEACON;
+        final String uniqueId = region.getUniqueId();
+        final String bluetoothAddress = region.getBluetoothAddress();
         final Identifier id1 = region.getId1();
         final Identifier id2 = region.getId2();
         final Identifier id3 = region.getId3();
 
         final FusedLocationProviderClient client = LocationServices.getFusedLocationProviderClient(this);
 
-        if (checkPermission(this)) {
+        if (checkPermission()) {
+
             client.getLastLocation()
                     .addOnSuccessListener(location -> {
-                        final GeoPoint point = new GeoPoint(Calendar.getInstance().getTimeInMillis(), type, location.getLatitude(), location.getLongitude());
-                        point.setDistance(Utils.getDistanceFromGeoFence(this, location));
 
-                        if (id1 != null) point.setId1(id1.toString());
-                        if (id2 != null) point.setId2(id2.toString());
-                        if (id3 != null) point.setId3(id3.toString());
+                        final float distanceFromGeoFence = Utils.getDistanceFromGeoFence(this, location);
 
-                        InfiDatabase.executeAsync(() -> InfiDatabase.get().getGeoPointDao().insert(point));
+                        if (distanceFromGeoFence < Constants.GEOFENCE_RADIUS) {
+
+                            final @Constants.GeoPointType String type = Constants.GeoPointType.NEAR_BEACON;
+                            final double latitude = location.getLatitude();
+                            final double longitude = location.getLongitude();
+
+                            final GeoPoint point = new GeoPoint(Calendar.getInstance().getTimeInMillis(), type, latitude, longitude);
+                            point.setDistance(distanceFromGeoFence);
+                            point.setUniqueId(uniqueId);
+                            point.setBluetoothAddress(bluetoothAddress);
+
+                            if (id1 != null) point.setId1(id1.toString());
+                            if (id2 != null) point.setId2(id2.toString());
+                            if (id3 != null) point.setId3(id3.toString());
+
+                            InfiDatabase.executeAsync(() -> InfiDatabase.get().getGeoPointDao().insert(point));
+                        } else {
+                            setAlarmManager();
+                            stopSelf();
+                        }
                     })
                     .addOnFailureListener(e -> {
+                        final @Constants.GeoPointType String type = Constants.GeoPointType.OTHER;
                         final GeoPoint point = new GeoPoint(Calendar.getInstance().getTimeInMillis(), type, 0, 0);
+                        point.setUniqueId(uniqueId);
+                        point.setBluetoothAddress(bluetoothAddress);
                         point.setId1(id1.toString());
                         point.setId2(id2.toString());
                         point.setId3(id3.toString());
@@ -187,12 +211,28 @@ public class MyBeaconService extends Service implements BeaconConsumer, RangeNot
     }
 
     // Check for permission to access Location
-    private boolean checkPermission(Context context) {
+    private boolean checkPermission() {
         Log.d(TAG, "checkPermission()");
 
         // Ask for permission if it wasn't granted yet
-        final int permission = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION);
+        final int permission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
         return permission == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void setAlarmManager() {
+        Log.d(TAG, "initAlarmManager() called");
+
+        final Calendar calendar = Calendar.getInstance();
+        final Intent intent = new Intent(this, AlarmReceiver.class);
+
+        final PendingIntent alarmManagerPendingIntent = PendingIntent.getBroadcast(this,
+                Constants.ALARM_MANAGER_PENDING_INTENT_REQUEST_CODE, intent, 0);
+
+        final AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager != null) {
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+                    AlarmManager.INTERVAL_FIFTEEN_MINUTES, alarmManagerPendingIntent);
+        }
     }
 
     /**
